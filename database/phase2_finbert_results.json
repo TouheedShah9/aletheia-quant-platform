@@ -1,0 +1,58 @@
+[
+  {
+    "ticker": "AAPL",
+    "expected": "positive",
+    "positive": 0.955,
+    "negative": 0.015,
+    "neutral": 0.03,
+    "score": 0.939
+  },
+  {
+    "ticker": "AAPL",
+    "expected": "neutral",
+    "positive": 0.739,
+    "negative": 0.188,
+    "neutral": 0.073,
+    "score": 0.552
+  },
+  {
+    "ticker": "AAPL",
+    "expected": "negative",
+    "positive": 0.01,
+    "negative": 0.969,
+    "neutral": 0.021,
+    "score": -0.959
+  },
+  {
+    "ticker": "MSFT",
+    "expected": "positive",
+    "positive": 0.956,
+    "negative": 0.016,
+    "neutral": 0.028,
+    "score": 0.94
+  },
+  {
+    "ticker": "MSFT",
+    "expected": "negative",
+    "positive": 0.01,
+    "negative": 0.969,
+    "neutral": 0.021,
+    "score": -0.959
+  },
+  {
+    "ticker": "JPM",
+    "expected": "positive",
+    "positive": 0.953,
+    "negative": 0.014,
+    "neutral": 0.033,
+    "score": 0.938
+  },
+  {
+    "ticker": "JPM",
+    "expected": "negative",
+    "positive": 0.141,
+    "negative": 0.774,
+    "neutral": 0.086,
+    "score": -0.633
+  }
+]

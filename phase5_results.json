@@ -1,0 +1,11 @@
+{
+  "phase": "5_causal_validation",
+  "t_test_p_value": 0.0004,
+  "causal_effect": 0.040613,
+  "ci_lower": 0.021773,
+  "ci_upper": 0.059543,
+  "random_common_cause": "PASSED",
+  "placebo_treatment": "PASSED",
+  "bootstrap_p_value": 0.4452,
+  "conclusion": "ENS has genuine causal predictive power. Bootstrap needs more data."
+}
