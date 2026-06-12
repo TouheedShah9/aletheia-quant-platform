@@ -1,10 +1,10 @@
 """
 ╔══════════════════════════════════════════════════════╗
 ║           ALETHEIA — Alpha Intelligence              ║
-║   Institutional Dashboard — All 8 Dimensions Live    ║
+║   Institutional Dashboard — All Dimensions + Mobile  ║
 ╚══════════════════════════════════════════════════════╝
 """
-import sys, os, json, time
+import sys, os, json, time, subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -21,7 +21,7 @@ from dashboard.components.charts import (
 from dashboard.components.interactivity import toast_notification
 from dashboard.components.performance import (
     optimized_query, get_db_connection, paginate_dataframe,
-    show_performance_stats, loading_skeleton
+    show_performance_stats
 )
 from dashboard.components.mobile import (
     inject_responsive_css, generate_pwa_manifest, MobileNavigation
@@ -56,6 +56,24 @@ div[data-testid="stDataFrame"] { background: rgba(15,23,55,0.6); border: 1px sol
 div[data-testid="stDataFrame"] table { color: #a0b4d0; }
 div[data-testid="stDataFrame"] th { background: rgba(0,170,255,0.1); color: #4a6090; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 10px; }
 .ai-card { background: linear-gradient(135deg, rgba(100,60,255,0.1), rgba(0,170,255,0.05)); border: 1px solid rgba(100,60,255,0.2); border-radius: 16px; padding: 20px; margin: 8px 0; }
+
+/* MOBILE OPTIMIZATION */
+@media (max-width: 768px) {
+    .stColumns { flex-direction: column !important; gap: 6px !important; }
+    .stColumns > div { width: 100% !important; flex: none !important; }
+    .kpi-number { font-size: 20px !important; }
+    .kpi-tag { font-size: 7px !important; letter-spacing: 1px !important; }
+    .glass { padding: 10px !important; border-radius: 12px !important; }
+    .sec-title { font-size: 9px !important; letter-spacing: 2px !important; margin-bottom: 8px !important; }
+    .stTabs [data-baseweb="tab-list"] { gap: 2px !important; padding: 2px !important; }
+    .stTabs [data-baseweb="tab"] { padding: 5px 7px !important; font-size: 7px !important; white-space: nowrap !important; }
+    .ticker-wrap { display: none !important; }
+    h1 { font-size: 22px !important; }
+    .stApp { padding: 6px !important; }
+    div[data-testid="stDataFrame"] { font-size: 9px !important; }
+    .js-plotly-plot { max-height: 220px !important; }
+    .ai-card { padding: 10px !important; margin: 4px 0 !important; }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -103,7 +121,7 @@ except: pass
 
 c1,c2,c3 = st.columns([1,6,2])
 with c1: st.markdown("<h1 style='font-size:36px;margin:0;'>◆</h1>", unsafe_allow_html=True)
-with c2: st.markdown("<div style='padding-top:8px;'><span style='font-size:24px;font-weight:800;color:#fff;'>ALETHEIA</span><span style='font-size:12px;color:#4a6090;margin-left:12px;letter-spacing:1px;'>ALPHA INTELLIGENCE PLATFORM</span></div>", unsafe_allow_html=True)
+with c2: st.markdown("<div style='padding-top:8px;'><span style='font-size:24px;font-weight:800;color:#fff;'>ALETHEIA</span><span style='font-size:12px;color:#4a6090;margin-left:12px;letter-spacing:1px;'>ALPHA INTELLIGENCE</span></div>", unsafe_allow_html=True)
 with c3: st.markdown(f"<div style='text-align:right;padding-top:10px;'><span class='pulse'></span><span style='color:{'#00ff88' if alpaca else '#5a7090'};font-size:11px;margin-left:6px;'>{'LIVE' if alpaca else 'CACHED'}</span><br><span style='color:#3a5070;font-size:9px;'>{datetime.utcnow().strftime('%H:%M UTC')}</span></div>", unsafe_allow_html=True)
 
 with st.expander("⚙️ CONTROLS & SEARCH", expanded=False):
@@ -153,7 +171,7 @@ with tab1:
                 fig.add_trace(go.Bar(x=[t],y=[s],marker=dict(color=colors[i],cornerradius=6),text=[f"<b>{s:+.3f}</b>"],textposition='outside',textfont=dict(color=colors[i],size=12)))
             fig.update_layout(plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',height=400,margin=dict(l=0,r=0,t=10,b=0),showlegend=False,xaxis=dict(showgrid=False,tickfont=dict(color='#4a6090')),yaxis=dict(showgrid=True,gridcolor='rgba(0,200,255,0.04)',zerolinecolor='rgba(0,200,255,0.15)'))
             fig.add_hline(y=0.05,line_dash="dash",line_color="rgba(0,255,136,0.2)"); fig.add_hline(y=-0.05,line_dash="dash",line_color="rgba(255,64,96,0.2)")
-            st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False})
+            st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False},key="signal_bars")
     with col_right:
         st.markdown("<div class='sec-title'>◆ POSITIONS</div>", unsafe_allow_html=True)
         if alpaca and alpaca.get('positions'):
@@ -168,43 +186,43 @@ with tab1:
             ec=['#00ff88' if x>0 else '#ff4060' for x in ens['e']]
             fe=go.Figure(go.Bar(x=ens['ticker'],y=ens['e'],marker_color=ec,text=ens['e'].round(3),textposition='outside',textfont=dict(color=ec,size=11),marker=dict(cornerradius=6)))
             fe.update_layout(plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',height=300,margin=dict(l=0,r=0,t=0,b=0),showlegend=False,xaxis=dict(showgrid=False,tickfont=dict(color='#4a6090')),yaxis=dict(showgrid=True,gridcolor='rgba(0,200,255,0.04)'))
-            st.plotly_chart(fe,use_container_width=True,config={'displayModeBar':False})
+            st.plotly_chart(fe,use_container_width=True,config={'displayModeBar':False},key="finbert_bars")
     with c2:
         st.markdown("<div class='sec-title'>◆ P&L ATTRIBUTION</div>", unsafe_allow_html=True)
-        st.plotly_chart(waterfall_chart(),use_container_width=True,config={'displayModeBar':False})
+        st.plotly_chart(waterfall_chart(),use_container_width=True,config={'displayModeBar':False},key="waterfall")
 
 with tab2:
     c1,c2=st.columns([1.5,1])
     with c1:
         st.markdown("<div class='sec-title'>◆ CANDLESTICK</div>", unsafe_allow_html=True)
         ticker_choice=st.selectbox('Ticker',['AAPL','MSFT','GOOGL','AMZN','META','JPM','XOM','JNJ','PFE','WMT','BAC','GS','CVX','HD','MCD'],key='candle')
-        st.plotly_chart(candlestick_chart(ticker_choice),use_container_width=True,config={'displayModeBar':False})
+        st.plotly_chart(candlestick_chart(ticker_choice),use_container_width=True,config={'displayModeBar':False},key="candle_chart")
     with c2:
         st.markdown("<div class='sec-title'>◆ CORRELATION</div>", unsafe_allow_html=True)
-        st.plotly_chart(correlation_heatmap(),use_container_width=True,config={'displayModeBar':False})
+        st.plotly_chart(correlation_heatmap(),use_container_width=True,config={'displayModeBar':False},key="heatmap")
     if history:
         st.markdown("<div class='sec-title'>◆ EQUITY CURVE</div>", unsafe_allow_html=True)
         hdf=pd.DataFrame(history)
         feq=go.Figure(go.Scatter(x=hdf['date'],y=hdf['equity'],mode='lines',fill='tozeroy',line=dict(color='#00aaff',width=2),fillcolor='rgba(0,170,255,0.05)'))
         feq.add_hline(y=100000,line_dash="dash",line_color="rgba(255,255,255,0.2)")
         feq.update_layout(plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',height=250,margin=dict(l=0,r=0,t=10,b=0),showlegend=False,xaxis=dict(showgrid=False,tickfont=dict(color='#4a6090',size=10)),yaxis=dict(showgrid=True,gridcolor='rgba(0,200,255,0.04)'))
-        st.plotly_chart(feq,use_container_width=True,config={'displayModeBar':False})
+        st.plotly_chart(feq,use_container_width=True,config={'displayModeBar':False},key="equity_curve")
 
 with tab3:
     st.markdown("<div class='sec-title'>◆ RISK GAUGES</div>", unsafe_allow_html=True)
     g1,g2,g3,g4=st.columns(4)
-    with g1: st.plotly_chart(risk_gauge(2.1,"Drawdown %",7),use_container_width=True,config={'displayModeBar':False})
-    with g2: st.plotly_chart(risk_gauge(1.35,"Sharpe",3),use_container_width=True,config={'displayModeBar':False})
-    with g3: st.plotly_chart(risk_gauge(0.8,"Sortino",3),use_container_width=True,config={'displayModeBar':False})
-    with g4: st.plotly_chart(risk_gauge(16.9,"Alloc %",50),use_container_width=True,config={'displayModeBar':False})
+    with g1: st.plotly_chart(risk_gauge(2.1,"Drawdown %",7),use_container_width=True,config={'displayModeBar':False},key="gauge1")
+    with g2: st.plotly_chart(risk_gauge(1.35,"Sharpe",3),use_container_width=True,config={'displayModeBar':False},key="gauge2")
+    with g3: st.plotly_chart(risk_gauge(0.8,"Sortino",3),use_container_width=True,config={'displayModeBar':False},key="gauge3")
+    with g4: st.plotly_chart(risk_gauge(16.9,"Alloc %",50),use_container_width=True,config={'displayModeBar':False},key="gauge4")
 
 with tab4:
     st.markdown("<div class='sec-title'>◆ SIGNAL NETWORK</div>", unsafe_allow_html=True)
-    st.plotly_chart(network_graph(),use_container_width=True,config={'displayModeBar':False})
+    st.plotly_chart(network_graph(),use_container_width=True,config={'displayModeBar':False},key="network_chart")
 
 with tab5:
     st.markdown("<div class='sec-title'>◆ EVENT TIMELINE</div>", unsafe_allow_html=True)
-    st.plotly_chart(event_timeline(),use_container_width=True,config={'displayModeBar':False})
+    st.plotly_chart(event_timeline(),use_container_width=True,config={'displayModeBar':False},key="timeline_chart")
 
 with tab6:
     st.markdown("<div class='sec-title'>◆ DATA EXPLORER</div>", unsafe_allow_html=True)
@@ -307,5 +325,7 @@ with tab9:
 MobileNavigation.bottom_nav()
 show_performance_stats()
 st.markdown("<div style='text-align:center;padding:20px 0;color:#2a3a5a;font-size:9px;letter-spacing:2px;'>◆ ALETHEIA ALPHA INTELLIGENCE ◆ RESEARCH PROTOTYPE ◆ NOT FINANCIAL ADVICE ◆</div>", unsafe_allow_html=True)
+
+subprocess.run(['python', 'live/alpaca_fetcher.py'], capture_output=True)
 time.sleep(30)
 st.rerun()
