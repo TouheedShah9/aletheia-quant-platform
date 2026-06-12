@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  aletheia:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./aletheia.db:/app/aletheia.db
+      - ./alpaca_data.json:/app/alpaca_data.json
+      - ./logs:/app/logs
+      - ./security:/app/security
+    env_file:
+      - .env
+    restart: unless-stopped
