@@ -1,0 +1,12 @@
+streamlit
+duckdb==0.9.2
+pandas
+numpy
+plotly
+python-dotenv
+loguru
+requests
+scipy
+yfinance
+pandas-datareader
+tenacity
