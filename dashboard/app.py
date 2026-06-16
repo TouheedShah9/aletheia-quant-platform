@@ -210,11 +210,38 @@ with tab2:
 
 with tab3:
     st.markdown("<div class='sec-title'>◆ RISK GAUGES</div>", unsafe_allow_html=True)
-    g1,g2,g3,g4=st.columns(4)
-    with g1: st.plotly_chart(risk_gauge(2.1,"Drawdown %",7),use_container_width=True,config={'displayModeBar':False},key="gauge1")
-    with g2: st.plotly_chart(risk_gauge(1.35,"Sharpe",3),use_container_width=True,config={'displayModeBar':False},key="gauge2")
-    with g3: st.plotly_chart(risk_gauge(0.8,"Sortino",3),use_container_width=True,config={'displayModeBar':False},key="gauge3")
-    with g4: st.plotly_chart(risk_gauge(16.9,"Alloc %",50),use_container_width=True,config={'displayModeBar':False},key="gauge4")
+    try:
+        import numpy as np
+        if alpaca and alpaca.get('positions'):
+            tv = alpaca.get('equity', 100000)
+            c = alpaca.get('cash', 0)
+            alloc = ((tv - c) / tv * 100) if tv > 0 else 0
+            dd = 0; sh = 0; so = 0
+            if history and len(history) > 1:
+                eq = [h['equity'] for h in history if h['equity'] > 0]
+                if len(eq) > 1:
+                    peak = max(eq); cur = eq[-1]
+                    dd = ((peak - cur) / peak * 100) if peak > 0 else 0
+                if len(eq) > 5:
+                    rets = np.diff(eq) / eq[:-1]
+                    sh = np.sqrt(252) * np.mean(rets) / (np.std(rets) + 1e-10)
+                    sh = max(-3, min(3, sh))
+                    down = rets[rets < 0]
+                    so = np.sqrt(252) * np.mean(rets) / (np.std(down) + 1e-10) if len(down) > 0 else 0
+                    so = max(-3, min(3, so))
+        else:
+            alloc = 0; dd = 0; sh = 0; so = 0
+        g1,g2,g3,g4=st.columns(4)
+        with g1: st.plotly_chart(risk_gauge(round(dd,1),"Drawdown %",7),use_container_width=True,config={'displayModeBar':False},key="g1")
+        with g2: st.plotly_chart(risk_gauge(round(abs(sh),2),"Sharpe",3),use_container_width=True,config={'displayModeBar':False},key="g2")
+        with g3: st.plotly_chart(risk_gauge(round(abs(so),2),"Sortino",3),use_container_width=True,config={'displayModeBar':False},key="g3")
+        with g4: st.plotly_chart(risk_gauge(round(alloc,1),"Alloc %",50),use_container_width=True,config={'displayModeBar':False},key="g4")
+    except:
+        g1,g2,g3,g4=st.columns(4)
+        with g1: st.plotly_chart(risk_gauge(0,"Drawdown %",7),use_container_width=True,config={'displayModeBar':False},key="g1")
+        with g2: st.plotly_chart(risk_gauge(0,"Sharpe",3),use_container_width=True,config={'displayModeBar':False},key="g2")
+        with g3: st.plotly_chart(risk_gauge(0,"Sortino",3),use_container_width=True,config={'displayModeBar':False},key="g3")
+        with g4: st.plotly_chart(risk_gauge(0,"Alloc %",50),use_container_width=True,config={'displayModeBar':False},key="g4")
 
 with tab4:
     st.markdown("<div class='sec-title'>◆ SIGNAL NETWORK</div>", unsafe_allow_html=True)
